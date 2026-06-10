@@ -28,7 +28,10 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        ...dto,
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        role: dto.role,
         password: hashedPassword,
       },
     });
@@ -40,7 +43,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { email: dto.email, deletedAt: null },
     });
 
@@ -61,7 +64,7 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { id: userId, deletedAt: null },
     });
 

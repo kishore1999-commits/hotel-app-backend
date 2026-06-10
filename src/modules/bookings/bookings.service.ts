@@ -34,37 +34,49 @@ export class BookingsService {
       throw new BadRequestException('Check-in date must be in the future');
     }
 
-    const booking = await this.prisma.$transaction(async (tx) => {
-      const room = await tx.$queryRaw<any[]>`
-        SELECT id, "pricePerNight", status, "isActive", "deletedAt"
-        FROM rooms
-        WHERE id = ${dto.roomId}
-        FOR UPDATE
-      `;
+    const hotel = await this.prisma.hotel.findFirst({
+      where: { id: dto.hotelId, deletedAt: null, isActive: true },
+    });
 
-      if (!room.length || room[0].deletedAt || !room[0].isActive) {
+    if (!hotel) {
+      throw new NotFoundException('Hotel not found or inactive');
+    }
+
+    const booking = await this.prisma.$transaction(async (tx) => {
+      const rooms: any[] = await tx.$queryRawUnsafe(
+        `SELECT id, "pricePerNight", status, "isActive", "deletedAt"
+         FROM rooms
+         WHERE id = $1
+         FOR UPDATE`,
+        dto.roomId,
+      );
+
+      if (!rooms.length || rooms[0].deletedAt || !rooms[0].isActive) {
         throw new NotFoundException('Room not found or inactive');
       }
 
-      if (room[0].status !== 'AVAILABLE') {
-        throw new ConflictException('Room is not available');
+      if (rooms[0].status !== 'AVAILABLE') {
+        throw new ConflictException('Room is not currently available');
       }
 
-      const conflicting = await tx.$queryRaw<any[]>`
-        SELECT id FROM bookings
-        WHERE "roomId" = ${dto.roomId}
-          AND "deletedAt" IS NULL
-          AND status IN ('PENDING', 'CONFIRMED')
-          AND "checkIn" < ${checkOut}
-          AND "checkOut" > ${checkIn}
-        FOR UPDATE
-      `;
+      const conflicts: any[] = await tx.$queryRawUnsafe(
+        `SELECT id FROM bookings
+         WHERE "roomId" = $1
+           AND "deletedAt" IS NULL
+           AND status IN ('PENDING', 'CONFIRMED')
+           AND "checkIn" < $2
+           AND "checkOut" > $3
+         FOR UPDATE`,
+        dto.roomId,
+        checkOut,
+        checkIn,
+      );
 
-      if (conflicting.length > 0) {
+      if (conflicts.length > 0) {
         throw new ConflictException('Room is already booked for the selected dates');
       }
 
-      const newBooking = await tx.booking.create({
+      return tx.booking.create({
         data: {
           userId,
           hotelId: dto.hotelId,
@@ -79,8 +91,6 @@ export class BookingsService {
           room: { select: { id: true, name: true, type: true } },
         },
       });
-
-      return newBooking;
     }, {
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     });
@@ -134,7 +144,10 @@ export class BookingsService {
         data: {
           razorpayPaymentId: dto.razorpayPaymentId,
           status: 'CAPTURED',
-          responseData: { razorpayPaymentId: dto.razorpayPaymentId },
+          responseData: {
+            razorpayOrderId: dto.razorpayOrderId,
+            razorpayPaymentId: dto.razorpayPaymentId,
+          },
         },
       }),
       this.prisma.booking.update({
@@ -232,6 +245,10 @@ export class BookingsService {
       data: {
         status: 'CANCELLED',
         cancellationReason: dto.cancellationReason,
+      },
+      include: {
+        hotel: { select: { id: true, name: true } },
+        room: { select: { id: true, name: true } },
       },
     });
 
