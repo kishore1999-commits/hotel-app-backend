@@ -4,28 +4,7 @@ export declare class HotelsService {
     private prisma;
     constructor(prisma: PrismaService);
     findAll(query: QueryHotelDto): Promise<{
-        data: ({
-            _count: {
-                reviews: number;
-                rooms: number;
-            };
-        } & {
-            name: string;
-            description: string | null;
-            id: string;
-            deletedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
-            address: string;
-            city: string;
-            country: string;
-            starRating: number;
-            images: string[];
-            amenities: string[];
-            checkInTime: string;
-            checkOutTime: string;
-            isActive: boolean;
-        })[];
+        data: any;
         meta: {
             total: number;
             page: number;
@@ -35,92 +14,8 @@ export declare class HotelsService {
             hasPrev: boolean;
         };
     }>;
-    findOne(id: string): Promise<{
-        _count: {
-            bookings: number;
-            reviews: number;
-        };
-        rooms: {
-            name: string;
-            type: string;
-            id: string;
-            deletedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
-            images: string[];
-            amenities: string[];
-            isActive: boolean;
-            hotelId: string;
-            pricePerNight: number;
-            capacity: number;
-            status: import(".prisma/client").$Enums.RoomStatus;
-        }[];
-    } & {
-        name: string;
-        description: string | null;
-        id: string;
-        deletedAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
-        address: string;
-        city: string;
-        country: string;
-        starRating: number;
-        images: string[];
-        amenities: string[];
-        checkInTime: string;
-        checkOutTime: string;
-        isActive: boolean;
-    }>;
-    create(dto: CreateHotelDto): Promise<{
-        name: string;
-        description: string | null;
-        id: string;
-        deletedAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
-        address: string;
-        city: string;
-        country: string;
-        starRating: number;
-        images: string[];
-        amenities: string[];
-        checkInTime: string;
-        checkOutTime: string;
-        isActive: boolean;
-    }>;
-    update(id: string, dto: UpdateHotelDto): Promise<{
-        name: string;
-        description: string | null;
-        id: string;
-        deletedAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
-        address: string;
-        city: string;
-        country: string;
-        starRating: number;
-        images: string[];
-        amenities: string[];
-        checkInTime: string;
-        checkOutTime: string;
-        isActive: boolean;
-    }>;
-    softDelete(id: string): Promise<{
-        name: string;
-        description: string | null;
-        id: string;
-        deletedAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
-        address: string;
-        city: string;
-        country: string;
-        starRating: number;
-        images: string[];
-        amenities: string[];
-        checkInTime: string;
-        checkOutTime: string;
-        isActive: boolean;
-    }>;
+    findOne(id: string): Promise<any>;
+    create(dto: CreateHotelDto): Promise<any>;
+    update(id: string, dto: UpdateHotelDto): Promise<any>;
+    softDelete(id: string): Promise<any>;
 }

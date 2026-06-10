@@ -4,39 +4,11 @@ import { PaginationDto } from '../../common/dto';
 export declare class ReviewsController {
     private reviewsService;
     constructor(reviewsService: ReviewsService);
-    create(userId: string, dto: CreateReviewDto): Promise<{
-        user: {
-            name: string;
-            id: string;
-            avatar: string | null;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        hotelId: string;
-        userId: string;
-        rating: number;
-        comment: string | null;
-    }>;
+    create(userId: string, dto: CreateReviewDto): Promise<any>;
     findByHotel(hotelId: string, pagination: PaginationDto): Promise<{
-        data: ({
-            user: {
-                name: string;
-                id: string;
-                avatar: string | null;
-            };
-        } & {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            hotelId: string;
-            userId: string;
-            rating: number;
-            comment: string | null;
-        })[];
+        data: any;
         meta: {
-            averageRating: number;
+            averageRating: any;
             total: number;
             page: number;
             limit: number;
