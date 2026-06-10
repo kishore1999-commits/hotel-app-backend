@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  HOTEL_ADMIN
+  SUPER_ADMIN
+}
+
+enum RoomStatus {
+  AVAILABLE
+  BOOKED
+  MAINTENANCE
+  CLEANING
+  BLOCKED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum TransactionStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  phone           String?
+  password        String
+  role            Role      @default(CUSTOMER)
+  isPhoneVerified Boolean   @default(false)
+  avatar          String?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bookings Booking[]
+  reviews  Review[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Hotel {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  address      String
+  city         String
+  country      String
+  starRating   Int       @default(0)
+  images       String[]
+  amenities    String[]
+  checkInTime  String    @default("14:00")
+  checkOutTime String    @default("11:00")
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  rooms    Room[]
+  bookings Booking[]
+  reviews  Review[]
+
+  @@index([city])
+  @@index([country])
+  @@index([isActive])
+  @@index([starRating])
+  @@map("hotels")
+}
+
+model Room {
+  id            String     @id @default(uuid())
+  hotelId       String
+  name          String
+  type          String
+  pricePerNight Float
+  capacity      Int
+  images        String[]
+  amenities     String[]
+  status        RoomStatus @default(AVAILABLE)
+  isActive      Boolean    @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  hotel    Hotel     @relation(fields: [hotelId], references: [id])
+  bookings Booking[]
+
+  @@index([hotelId])
+  @@index([type])
+  @@index([status])
+  @@index([pricePerNight])
+  @@index([capacity])
+  @@map("rooms")
+}
+
+model Booking {
+  id                 String        @id @default(uuid())
+  userId             String
+  hotelId            String
+  roomId             String
+  checkIn            DateTime
+  checkOut           DateTime
+  totalPrice         Float
+  status             BookingStatus @default(PENDING)
+  paymentStatus      PaymentStatus @default(PENDING)
+  specialRequests    String?
+  cancellationReason String?
+  deletedAt          DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id])
+  hotel       Hotel        @relation(fields: [hotelId], references: [id])
+  room        Room         @relation(fields: [roomId], references: [id])
+  transaction Transaction?
+
+  @@index([userId])
+  @@index([hotelId])
+  @@index([roomId])
+  @@index([status])
+  @@index([checkIn, checkOut])
+  @@map("bookings")
+}
+
+model Transaction {
+  id                 String            @id @default(uuid())
+  bookingId          String            @unique
+  razorpayOrderId    String?           @unique
+  razorpayPaymentId  String?           @unique
+  amount             Float
+  status             TransactionStatus @default(CREATED)
+  responseData       Json?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([razorpayOrderId])
+  @@index([status])
+  @@map("transactions")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  hotelId   String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+
+  @@unique([userId, hotelId])
+  @@index([hotelId])
+  @@index([rating])
+  @@map("reviews")
+}
